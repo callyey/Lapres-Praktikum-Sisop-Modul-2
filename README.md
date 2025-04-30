@@ -1,90 +1,4 @@
-# Organize and Analyze Anthony's Favorite Films
-
-Anthony sedang asyik menonton film favoritnya dari Netflix, namun seiring berjalannya waktu, koleksi filmnya semakin menumpuk. Ia pun memutuskan untuk membuat sistem agar film-film favoritnya bisa lebih terorganisir dan mudah diakses. Anthony ingin melakukan beberapa hal dengan lebih efisien dan serba otomatis.
-
-> Film-film yang dimaksud adalah film-film yang ada di dalam file ZIP yang bisa diunduh dari **[Google Drive](https://drive.google.com/file/d/12GWsZbSH858h2HExP3x4DfWZB1jLdV-J/view?usp=drive_link)**.
-
-Berikut adalah serangkaian tugas yang Anthony ingin capai untuk membuat pengalaman menonton filmnya jadi lebih menyenangkan:
-
-### **a. One Click and Done!**
-
-Pernahkah kamu merasa malas untuk mengelola file ZIP yang penuh dengan data film? Anthony merasa hal yang sama, jadi dia ingin semuanya serba instan dengan hanya satu perintah. Dengan satu perintah saja, Anthony bisa:
-
-- Mendownload file ZIP yang berisi data film-film Netflix favoritnya.
-- Mengekstrak file ZIP tersebut ke dalam folder yang sudah terorganisir.
-- Menghapus file ZIP yang sudah tidak diperlukan lagi, supaya tidak memenuhi penyimpanan.
-
-Buatlah skrip yang akan mengotomatiskan proses ini sehingga Anthony hanya perlu menjalankan satu perintah untuk mengunduh, mengekstrak, dan menghapus file ZIP.
-
-### **b. Sorting Like a Pro**
-
-Koleksi film Anthony semakin banyak dan dia mulai bingung mencari cara yang cepat untuk mengelompokkannya. Nah, Anthony ingin mengelompokkan film-filmnya dengan dua cara yang sangat mudah:
-
-1. Berdasarkan huruf pertama dari judul film.
-2. Berdasarkan tahun rilis (release year).
-
-Namun, karena Anthony sudah mempelajari **multiprocessing**, dia ingin mengelompokkan kedua kategori ini secara paralel untuk menghemat waktu.
-
-**Struktur Output:**
-
-- **Berdasarkan Huruf Pertama Judul Film:**
-
-  - Folder: `judul/`
-  - Setiap file dinamai dengan huruf abjad atau angka, seperti `A.txt`, `B.txt`, atau `1.txt`.
-  - Jika judul film tidak dimulai dengan huruf atau angka, film tersebut disimpan di file `#.txt`.
-
-- **Berdasarkan Tahun Rilis:**
-  - Folder: `tahun/`
-  - Setiap file dinamai sesuai tahun rilis film, seperti `1999.txt`, `2021.txt`, dst.
-
-Format penulisan dalam setiap file :
-
-```
-Judul Film - Tahun Rilis - Sutradara
-```
-
-Setiap proses yang berjalan akan mencatat aktivitasnya ke dalam satu file bernama **`log.txt`** dengan format:
-
-```
-[jam:menit:detik] Proses mengelompokkan berdasarkan [Abjad/Tahun]: sedang mengelompokkan untuk film [judul_film]
-```
-
-**Contoh Log:**
-
-```
-[14:23:45] Proses mengelompokkan berdasarkan Abjad: sedang mengelompokkan untuk film Avengers: Infinity War
-[14:23:46] Proses mengelompokkan berdasarkan Tahun: sedang mengelompokkan untuk film Kung Fu Panda
-```
-
-### **c. The Ultimate Movie Report**
-
-Sebagai penggemar film yang juga suka menganalisis, Anthony ingin mengetahui statistik lebih mendalam tentang film-film yang dia koleksi. Misalnya, dia ingin tahu berapa banyak film yang dirilis **sebelum tahun 2000** dan **setelah tahun 2000**.
-
-Agar laporan tersebut mudah dibaca, Anthony ingin hasilnya disimpan dalam file **`report_ddmmyyyy.txt`**.
-
-**Format Output dalam Laporan:**
-
-```
-i. Negara: <nama_negara>
-Film sebelum 2000: <jumlah>
-Film setelah 2000: <jumlah>
-
-...
-i+n. Negara: <nama_negara>
-Film sebelum 2000: <jumlah>
-Film setelah 2000: <jumlah>
-```
-
-Agar penggunaannya semakin mudah, Anthony ingin bisa menjalankan semua proses di atas melalui sebuah antarmuka terminal interaktif dengan pilihan menu seperti berikut:
-1. Download File
-2. Mengelompokkan Film
-3. Membuat Report
-
-Catatan:
-- Dilarang menggunakan `system`
-- Harap menggunakan thread dalam pengerjaan soal C
----
-
+# 2. Organize and Analyze Anthony's Favorite Films
 ## Penyelesaian
 ## A. One Click and Done
 
@@ -263,6 +177,145 @@ Fungsi logmsg digunakan untuk mencatat aktivitas pengelompokan data film ke dala
 ![Output 2](output/b.png)
 
 ![Output 2](output/c.png)
+
+## C. Ultimate Movie Report
+
+### 1. Reports
+```
+void generate_report() {
+    if (film_count == 0) {
+        printf("Tidak ada film untuk dilaporkan.\n");
+        return;
+    }
+    country_count = 0;
+    for (int i = 0; i < film_count; i++) {
+        int found = 0;
+        for (int j = 0; j < country_count; j++) {
+            if (strcmp(countries[j].name, films[i].country) == 0) {
+                found = 1;
+                if (films[i].year < 2000) countries[j].before_2000++;
+                else countries[j].after_2000++;
+                break;
+            }
+        }
+        if (!found && country_count < MAX_COUNTRIES) {
+            strncpy(countries[country_count].name, films[i].country, MAX_LINE);
+            countries[country_count].before_2000 = films[i].year < 2000 ? 1 : 0;
+            countries[country_count].after_2000 = films[i].year >= 2000 ? 1 : 0;
+            country_count++;
+        }
+    }
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    char report_filename[50];
+    snprintf(report_filename, sizeof(report_filename), "report_%02d%02d%04d.txt",
+             t->tm_mday, t->tm_mon + 1, t->tm_year + 1900);
+
+    FILE *report = fopen(report_filename, "w");
+    if (!report) {
+        perror("Gagal membuat laporan");
+        return;
+    }
+    for (int i = 0; i < country_count; i++) {
+        fprintf(report, "%d. Negara: %s\n", i + 1, countries[i].name);
+        fprintf(report, "   Film sebelum 2000: %d\n", countries[i].before_2000);
+        fprintf(report, "   Film setelah 2000: %d\n\n", countries[i].after_2000);
+    }
+    fclose(report);
+    printf("Laporan berhasil dibuat: %s\n", report_filename);
+}
+```
+Fungsi `generate_report` berfungsi untuk mengelompokkan film berdasarkan negara dan menghitung jumlah film sebelum dan setelah tahun 2000 untuk setiap negara menggunakan `for-loop`.  Laporan disimpan dalam file teks dengan nama yang dibentuk berdasarkan tanggal saat ini (format: report_DDMMYYYY.txt).
+
+```
+void load_films() {
+    film_count = 0;
+    DIR *dir = opendir(EXTRACT_FOLDER);
+    if (!dir) return;
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+        if (!strstr(ent->d_name, ".csv")) continue;
+
+        char filepath[MAX_PATH_LEN];
+        snprintf(filepath, sizeof(filepath), "%s/%s", EXTRACT_FOLDER, ent->d_name);
+
+        FILE *fp = fopen(filepath, "r");
+        if (!fp) continue;
+
+        char line[MAX_LINE];
+        while (fgets(line, sizeof(line), fp)) {
+            char *token = strtok(line, ",");
+            if (!token) continue;
+            strncpy(films[film_count].title, token, MAX_LINE);
+
+            token = strtok(NULL, ",");
+            if (!token) continue;
+            strncpy(films[film_count].director, token, MAX_LINE);
+
+            token = strtok(NULL, ",");
+            if (!token) continue;
+            strncpy(films[film_count].country, token, MAX_LINE);
+
+            token = strtok(NULL, "\n");
+            if (!token) continue;
+            films[film_count].year = atoi(token);
+
+            if (++film_count >= MAX_FILMS) break;
+        }
+        fclose(fp);
+    }
+    closedir(dir);
+}
+```
+Fungsi `load_films` bertugas memuat data film dari file CSV yang terdapat dalam direktori tertentu (`EXTRACT_FOLDER`). Fungsi ini membaca setiap file CSV di direktori tersebut, mem-parsing baris demi baris untuk mengekstrak informasi film (judul, sutradara, negara, dan tahun rilis), dan menyimpan data tersebut ke dalam array global `films`.
+
+```
+void report() {
+    printf("\n=== Membuat Laporan ===\n");
+    load_films();
+    generate_report();
+    printf("\nTekan enter untuk melanjutkan..."); getchar();
+}
+```
+Fungsi ini akan menampilkan pesan bahwa laporan sedang dibuat dan menjalankan proses pembuatan laporan dengan memanggil fungsi `load_films` dan juga `generate_report`.
+
+### 2. Terminal Interaktif
+```
+void menu() {
+    int choice;
+    while (1) {
+        printf("\033[H\033[J");
+        printf("=== Netflix Film Organizer ===\n");
+        printf("1. Download dan Ekstrak File\n");
+        printf("2. Kelompokkan Film\n");
+        printf("3. Buat Laporan\n");
+        printf("4. Keluar\n");
+        printf("Pilihan: ");
+        scanf("%d", &choice); getchar();
+
+        switch (choice) {
+            case 1: download_and_extract(); break;
+            case 2: group_films(); break;
+            case 3: report(); break;
+            case 4: return;
+            default:
+                printf("Pilihan tidak valid!\n\nTekan enter untuk melanjutkan..."); getchar();
+        }
+    }
+}
+```
+Fungsi ini menampilkan menu interaktif di terminal yang memungkinkan pengguna untuk memilih opsi seperti mengunduh dan mengekstrak file, mengelompokkan film, membuat laporan, atau keluar dari program.
+
+### 3. Output
+
+![Output 3](output/d.png)
+
+![Output 3](output/e.png)
+
+
+
+
 
 
 
