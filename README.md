@@ -189,7 +189,7 @@ Fungsi ini berguna untuk membuat proses download serta extract file dalam satu p
 
 4. Output
 
-![Output 1](output/Screenshot\ \(258\).png)
+![Output 1](output/'Screenshot (258).png')
 
 
 
