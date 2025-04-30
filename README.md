@@ -86,11 +86,11 @@ Catatan:
 ---
 
 ## Penyelesaian
-**A. One Click and Done**
+## A. One Click and Done
 
 Pada soal 2a, kita diminta untuk membuat skrip yang mengotomatiskan proses download, ekstrak, dan menghapus file ZIP jika tidak diperlukan hanya dengan satu perintah. 
 
-1. Download 
+### 1. Download 
 
  ```
     int downloadFile(){
@@ -128,7 +128,7 @@ Pada soal 2a, kita diminta untuk membuat skrip yang mengotomatiskan proses downl
   ```
 Dalam fungsi ini, file akan didownload dengan ``libcurl`` lalu data dari file tersebut akan disimpan dalam buffer memori ``chunk``. Jika unduhan gagal, maka akan menampilkan pesan error dan akan langsung keluar dari fungsi. Jika berhasil, data yang telah diunduh tadi akan ditulis ke dalam file lokal(netflixData.zip).
 
-2. Extract Zip
+### 2. Extract Zip
 
 ```
 int extract_zip() {
@@ -172,7 +172,7 @@ int extract_zip() {
 Pada fungsi ini, file zip yang sudah diunduh di fungsi `downloadFile` akan dibuka dengan `struct zip *za = zip_open(ZIP_FILENAME, 0, &err);`. Kemudian kita akan membuat folder baru dengan `makedir` untuk 
 menempatkan file hasil extract. Lalu, akan dilakukan for-loop untuk melakukan iterasi ke semua file di dalam file zip  dengan `zip_get_num_entries` dan isi file tersebut akan dibaca dengan `zip_read` dan didtulis  ke dalam file lokal dengan `write`.
 
-3. Download and Extract
+### 3. Download and Extract
 ```
 void download_and_extract() {
     printf("\n=== Download dan Ekstrak File ===\n");
@@ -187,7 +187,7 @@ void download_and_extract() {
 ```
 Fungsi ini berguna untuk membuat proses download serta extract file dalam satu perintah saja. Jika proses dwonload dan extract berhasil, maka file zip akan dihapus dengan `remove(ZIP_FILENAME);`. Namun, jika hanya salah satu proses yang berhasil atau kedua proses gagal, maka akan menampilkan `Terjadi kesalahan dalam proses download atau ekstrak`.
 
-4. Output
+### 4. Output
 
 ![Output 1](output/Screenshot%20(258).png)
 
@@ -195,7 +195,7 @@ Fungsi ini berguna untuk membuat proses download serta extract file dalam satu p
 
 
 
-**B. Sorting Like a Pro**
+## B. Sorting Like a Pro
 
 
     
