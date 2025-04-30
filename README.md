@@ -196,6 +196,80 @@ Fungsi ini berguna untuk membuat proses download serta extract file dalam satu p
 
 
 ## B. Sorting Like a Pro
+### 1. Huruf
+```
+void *sortTitle(void *arg) {
+    makedir("judul");
+    for (int i = 0; i < film_count; i++) {
+        char ch = toupper(films[i].title[0]);
+        char filename[20];
+        if (isalnum(ch)) snprintf(filename, sizeof(filename), "judul/%c.txt", ch);
+        else strcpy(filename, "judul/#.txt");
+
+        logmsg("Abjad", films[i].title);
+
+        FILE *fp = fopen(filename, "a");
+        if (fp) {
+            fprintf(fp, "%s - %d - %s\n", films[i].title, films[i].year, films[i].director);
+            fclose(fp);
+        }
+    }
+    return NULL;
+}
+```
+Di fungsi ini, kita akan membuat folder 'judul' untuk menyimpan hasil judul film yang sudah disortir berdasarkan abjad dengan ``makedir``. ``for-loop`` akan melakukan iterasi ke seluruh data film yang jumlahnya ``film_count``. Lalu, karakter pertama dari judul film akan diambil dan diubah menjadi huruf kapital dengan ``char ch = toupper(films[i].title[0]);``. Karakter pertama dari judul film akan diperiksa apakah alfabet, numerik, atau bukan keduanya. Jika berupa alfabet atau numerik, maka akan dibuat file dengan format nama `judul/%c.txt`(misal A.txt). Namun, jika tidak keduanya maka akan diatur ke `judul/#.txt`. Kemudian fungsi `logmsg("Abjad", films[i].title);` dipanggil untuk mencatat bahwa film sedang dikelompokkan berdasarkan judul. Terakhir, data film akan dituliskan ke dalam file dengan format `judul-tahun-sutradara`.
+
+### 2. Tahun
+```
+void *sortYear(void *arg) {
+    makedir("tahun");
+    for (int i = 0; i < film_count; i++) {
+        char filename[20];
+        snprintf(filename, sizeof(filename), "tahun/%d.txt", films[i].year);
+        logmsg("Tahun", films[i].title);
+
+        FILE *fp = fopen(filename, "a");
+        if (fp) {
+            fprintf(fp, "%s - %d - %s\n", films[i].title, films[i].year, films[i].director);
+            fclose(fp);
+        }
+    }
+    return NULL;
+}
+```
+Fungsi sortYear adalah fungsi yang berjalan dalam thread untuk mengelompokkan data film berdasarkan tahun rilis ke dalam file teks di folder tahun. Folder tahun dibuat menggunakan fungsi `makedir` jika belum ada. Fungsi ini mengiterasi melalui array global films sebanyak `film_count` kali menggunakan for-loop. Untuk setiap film, nama file dibentuk dengan format `tahun/%d.txt` berdasarkan nilai `films[i].year` (misalnya, tahun/2000.txt untuk tahun 2000). File dibuka dalam mode append ("a") untuk menambahkan data tanpa menghapus konten sebelumnya. Jika file berhasil dibuka, data film ditulis dalam format judul - tahun - sutradara (contoh: Avengers - 2012 - Joss Whedon). Aktivitas pengelompokan dicatat ke file log menggunakan logmsg("Tahun", films[i].title). 
+
+### 3. Log Message
+```
+void logmsg(const char *category, const char *film_title) {
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    pthread_mutex_lock(&log_mutex);
+    FILE *logmsg = fopen("log.txt", "a");
+    if (logmsg) {
+        fprintf(logmsg, "[%02d:%02d:%02d] Proses mengelompokkan berdasarkan %s: sedang mengelompokkan untuk film %s\n",
+                t->tm_hour, t->tm_min, t->tm_sec, category, film_title);
+        fclose(logmsg);
+    }
+    pthread_mutex_unlock(&log_mutex);
+}
+```
+Fungsi logmsg digunakan untuk mencatat aktivitas pengelompokan data film ke dalam file `log.txt`. Fungsi ini menulis pesan log dengan format yang mencakup stempel waktu, kategori pengelompokan (misalnya, "Abjad" atau "Tahun"), dan judul film yang sedang diproses. Fungsi ini dirancang untuk thread-safe dengan menggunakan mutex (pthread_mutex_t) untuk mencegah konflik akses file saat dijalankan dalam kondisi multithreaded, seperti saat digunakan bersama fungsi sortTitle dan sortYear. Contohnya, program memproses `logmsg("Abjad", "Avengers");` maka isi log.txt nya akan seperti `[09:05:23] Proses mengelompokkan berdasarkan Abjad: sedang mengelompokkan untuk film Avengers`.
+
+### 4. Output
+
+![Output 2](output/a.png)
+
+![Output 2](output/b.png)
+
+![Output 2](output/c.png)
+
+
+
+
+
+
+ 
 
 
     
