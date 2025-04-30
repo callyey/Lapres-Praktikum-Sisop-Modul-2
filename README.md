@@ -189,12 +189,8 @@ Fungsi ini berguna untuk membuat proses download serta extract file dalam satu p
 
 4. Output
 
-<<<<<<< HEAD
 ![Output 1](output/Screenshot%20(258).png)
 ![Output 1](output/Screenshot%20(261).png)
-=======
-![Output 1](output/'Screenshot (258).png')
->>>>>>> 8abbd79812aa190588e37fd9ac80a3923a12ec30
 
 
 
