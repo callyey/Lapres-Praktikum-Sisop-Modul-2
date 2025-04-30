@@ -84,3 +84,121 @@ Catatan:
 - Dilarang menggunakan `system`
 - Harap menggunakan thread dalam pengerjaan soal C
 ---
+
+## Penyelesaian
+**A. One Click and Done**
+
+Pada soal 2a, kita diminta untuk membuat skrip yang mengotomatiskan proses download, ekstrak, dan menghapus file ZIP jika tidak diperlukan hanya dengan satu perintah. 
+
+1. Download 
+
+ ```
+    int downloadFile(){
+      
+    CURL *curl = curl_easy_init();
+    if (!curl) return -1;
+
+    struct MemoryStruct chunk = {malloc(1), 0};
+    curl_easy_setopt(curl, CURLOPT_URL, ZIP_URL);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        fprintf(stderr, "Download failed: %s\n", curl_easy_strerror(res));
+        free(chunk.memory);
+        curl_easy_cleanup(curl);
+        return -1;
+    }
+
+    FILE *fp = fopen(ZIP_FILENAME, "wb");
+    if (!fp) {
+        perror("File open failed");
+        free(chunk.memory);
+        curl_easy_cleanup(curl);
+        return -1;
+    }
+    fwrite(chunk.memory, 1, chunk.size, fp);
+    fclose(fp);
+    free(chunk.memory);
+    curl_easy_cleanup(curl);
+    return 0;
+    }
+  ```
+Dalam fungsi ini, file akan didownload dengan ``libcurl`` lalu data dari file tersebut akan disimpan dalam buffer memori ``chunk``. Jika unduhan gagal, maka akan menampilkan pesan error dan akan langsung keluar dari fungsi. Jika berhasil, data yang telah diunduh tadi akan ditulis ke dalam file lokal(netflixData.zip).
+
+2. Extract Zip
+
+```
+int extract_zip() {
+    int err = 0;
+    struct zip *za = zip_open(ZIP_FILENAME, 0, &err);
+    if (!za) return -1;
+
+    makedir(EXTRACT_FOLDER);
+    for (int i = 0; i < zip_get_num_entries(za, 0); i++) {
+        struct zip_stat sb;
+        if (zip_stat_index(za, i, 0, &sb) != 0) continue;
+
+        char filepath[MAX_PATH_LEN];
+        snprintf(filepath, sizeof(filepath), "%s/%s", EXTRACT_FOLDER, sb.name);
+
+        char *slash = strrchr(filepath, '/');
+        if (slash) {
+            *slash = '\0';
+            makedir(filepath);
+            *slash = '/';
+        }
+
+        struct zip_file *zf = zip_fopen_index(za, i, 0);
+        if (!zf) continue;
+
+        int fd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd >= 0) {
+            char buf[4096];
+            zip_int64_t len;
+            while ((len = zip_fread(zf, buf, sizeof(buf))) > 0) {
+                write(fd, buf, len);
+            }
+            close(fd);
+        }
+        zip_fclose(zf);
+    }
+    zip_close(za);
+    return 0;
+}
+```
+Pada fungsi ini, file zip yang sudah diunduh di fungsi `downloadFile` akan dibuka dengan `struct zip *za = zip_open(ZIP_FILENAME, 0, &err);`. Kemudian kita akan membuat folder baru dengan `makedir` untuk 
+menempatkan file hasil extract. Lalu, akan dilakukan for-loop untuk melakukan iterasi ke semua file di dalam file zip  dengan `zip_get_num_entries` dan isi file tersebut akan dibaca dengan `zip_read` dan didtulis  ke dalam file lokal dengan `write`.
+
+3. Download and Extract
+```
+void download_and_extract() {
+    printf("\n=== Download dan Ekstrak File ===\n");
+    if (downloadFile() == 0 && extract_zip() == 0) {
+        remove(ZIP_FILENAME);
+        printf("File berhasil diunduh dan diekstrak ke folder '%s'\n", EXTRACT_FOLDER);
+    } else {
+        printf("Terjadi kesalahan dalam proses download atau ekstrak\n");
+    }
+    printf("\nTekan enter untuk melanjutkan..."); getchar();
+}
+```
+Fungsi ini berguna untuk membuat proses download serta extract file dalam satu perintah saja. Jika proses dwonload dan extract berhasil, maka file zip akan dihapus dengan `remove(ZIP_FILENAME);`. Namun, jika hanya salah satu proses yang berhasil atau kedua proses gagal, maka akan menampilkan `Terjadi kesalahan dalam proses download atau ekstrak`.
+
+4. Output
+
+![Output 1](output/Screenshot\ \(258\).png)
+
+
+
+**B. Sorting Like a Pro**
+
+
+    
+    
+
+
+
+
